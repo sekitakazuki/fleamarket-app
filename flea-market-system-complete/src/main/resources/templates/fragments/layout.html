@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+<head th:fragment="head(title)">
+  <meta charset="UTF-8">
+  <title th:text="${title}">ページ</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<body>
+  <header th:fragment="header">
+    <nav class="navbar">
+      <a class="brand" th:href="@{/items}">FleaMarket</a>
+      <div class="nav-links">
+        <a th:href="@{/items}">商品一覧</a>
+        <a th:href="@{/admin/users}" th:if="${#authorization.expression('hasRole(''ADMIN'')')}">ユーザー管理</a>
+      </div>
+
+      <!-- ログアウト：POST /logout（CSRF 必須） -->
+      <form th:action="@{/logout}" method="post" class="logout-form">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <button type="submit">ログアウト</button>
+      </form>
+    </nav>
+  </header>
+</body>
+</html>

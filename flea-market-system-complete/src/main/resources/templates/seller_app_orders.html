@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>販売履歴 - フリマアプリ</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+	<header th:insert="~{fragments/layout :: header}"></header>
+    <div class="container">
+        <h1>販売履歴</h1>
+        <p>あなたが販売した商品の一覧です。</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>商品名</th>
+                    <th>購入者</th>
+                    <th>価格</th>
+                    <th>ステータス</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="order : ${mySales}">
+                    <td th:text="${order.item.name}"></td>
+                    <td th:text="${order.buyer.name}"></td>
+                    <td th:text="'¥' + ${#numbers.formatDecimal(order.price, 0, 'COMMA', 0, 'POINT')}"></td>
+                    <td th:text="${order.status}"></td>
+                    <td>
+                        <form th:action="@{/orders/{id}/ship(id=${order.id})}" method="post" th:if="${order.status == '購入済'}">
+                            <button type="submit" class="button">発送済みにする</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(mySales)}">
+                    <td colspan="5">販売した商品はありません。</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="button-group">
+            <a th:href="@{/my-page}" class="button secondary">マイページに戻る</a>
+        </div>
+    </div>
+</body>
+</html>

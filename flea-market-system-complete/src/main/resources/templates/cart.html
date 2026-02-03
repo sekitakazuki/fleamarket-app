@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<title>カート - フリマアプリ</title>
+	<link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<body>
+	<header th:insert="~{fragments/layout :: header}"></header>
+	<div class="container">
+
+		<h1>カート</h1>
+
+		<!-- メッセージ表示 -->
+		<div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+		<div th:if="${errorMessage}" class="error-message" th:text="${errorMessage}"></div>
+
+		<!-- カートが空の場合 -->
+		<div th:if="${#lists.isEmpty(cartItems)}">
+			<p>カートに商品は入っていません。</p>
+			<a th:href="@{/items}" class="button">商品一覧へ戻る</a>
+		</div>
+
+		<!-- カート一覧 -->
+		<div th:unless="${#lists.isEmpty(cartItems)}">
+			<table class="cart-table">
+				<thead>
+					<tr>
+						<th>商品</th>
+						<th>価格</th>
+						<th>操作</th>
+					</tr>
+			</thead>
+
+				<tbody>
+					<tr th:each="cartItem : ${cartItems}">
+						<!-- 商品情報 -->
+						<td>
+							<div class="cart-item">
+								<img  th:src="${cartItem.item != null and cartItem.item.imageUrl != null ? cartItem.item.imageUrl : '/images/20200501_noimage.png'}"  th:alt="${cartItem.item != null ? cartItem.item.name : '商品画像ありません'}"  class="item-image">
+								<div>
+									<p th:text="${cartItem.item.name}"></p>
+									<p class="status" th:text="${cartItem.item.status}"></p>
+								</div>
+							</div>
+						</td>
+
+						<!-- 価格 -->
+						<td>
+							<span
+								th:text="'¥' + ${#numbers.formatDecimal(cartItem.item.price, 0, 'COMMA', 0, 'POINT')}"></span>
+						</td>
+
+						<!-- 操作 -->
+						<td>
+							<!-- 購入 -->
+							<form th:action="@{/cart/purchase}" method="post" style="display:inline;">
+								<input type="hidden" name="cartItemId" th:value="${cartItem.id}">
+								<button type="submit" class="button" th:disabled="${cartItem.item.status != '出品中'}">
+									購入する
+								</button>
+							</form>
+
+							<!-- 削除 -->
+							<form th:action="@{/cart/remove}" method="post" style="display:inline;">
+								<input type="hidden" name="cartItemId" th:value="${cartItem.id}">
+								<button type="submit" class="button danger">
+									削除
+								</button>
+							</form>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			
+			<div class="button-group">
+				<a th:href="@{/items}" class="button secondary">商品一覧に戻る</a>
+			</div>
+		</div>
+
+	</div>
+</body>
+
+</html>

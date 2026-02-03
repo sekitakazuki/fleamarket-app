@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+	<head th:replace="~{fragments/layout :: head('ページタイトル')}"></head>
+	<body>
+	  <header th:insert="~{fragments/layout :: header}"></header>
+	  <!-- 以降そのページ固有の内容 -->
+
+<main class="container">
+  <h1>ユーザー管理</h1>
+
+  <form method="get" class="toolbar">
+    <input type="text" name="q" th:value="${q}" placeholder="検索（名前/メール）">
+    <select name="sort">
+      <option th:value="id"     th:selected="${sort=='id'}">ID</option>
+      <option th:value="name"   th:selected="${sort=='name'}">名前</option>
+      <option th:value="email"  th:selected="${sort=='email'}">メール</option>
+      <option th:value="banned" th:selected="${sort=='banned'}">BAN状況</option>
+    </select>
+    <button type="submit">絞り込み</button>
+  </form>
+
+  <table class="table">
+    <thead>
+      <tr><th>ID</th><th>名前</th><th>メール</th><th>ロール</th><th>有効</th><th>BAN</th><th>詳細</th></tr>
+    </thead>
+    <tbody>
+      <tr th:each="u : ${users}">
+        <td th:text="${u.id}"></td>
+        <td th:text="${u.name}"></td>
+        <td th:text="${u.email}"></td>
+        <td th:text="${u.role}"></td>
+        <td th:text="${u.enabled}"></td>
+        <td th:text="${u.banned}"></td>
+        <td><a th:href="@{|/admin/users/${u.id}|}">詳細</a></td>
+      </tr>
+    </tbody>
+  </table>
+</main>
+</body>
+</html>

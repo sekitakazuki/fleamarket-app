@@ -25,6 +25,18 @@
 
 		<!-- カート一覧 -->
 		<div th:unless="${#lists.isEmpty(cartItems)}">
+			<div class="cart-summary" style="margin-top: 20px; text-align: right;">
+				<h2 th:with="total=${#aggregates.sum(cartItems.![item.price])}">
+					合計金額: <span th:text="'¥' + ${#numbers.formatDecimal(total, 0, 'COMMA', 0, 'POINT')}"></span>
+				</h2>
+
+				<form th:action="@{/cart/checkout}" method="post">
+					<button type="submit" class="button primary-large"
+						style="padding: 15px 30px; font-size: 1.2em; background-color: #ff4d4d; color: white; border: none; border-radius: 5px; cursor: pointer;">
+						カート内の商品をまとめて購入する
+					</button>
+				</form>
+			</div>
 			<table class="cart-table">
 				<thead>
 					<tr>
@@ -32,14 +44,16 @@
 						<th>価格</th>
 						<th>操作</th>
 					</tr>
-			</thead>
+				</thead>
 
 				<tbody>
 					<tr th:each="cartItem : ${cartItems}">
 						<!-- 商品情報 -->
 						<td>
 							<div class="cart-item">
-								<img  th:src="${cartItem.item != null and cartItem.item.imageUrl != null ? cartItem.item.imageUrl : '/images/20200501_noimage.png'}"  th:alt="${cartItem.item != null ? cartItem.item.name : '商品画像ありません'}"  class="item-image">
+								<img th:src="${cartItem.item != null and cartItem.item.imageUrl != null ? cartItem.item.imageUrl : '/images/20200501_noimage.png'}"
+									th:alt="${cartItem.item != null ? cartItem.item.name : '商品画像ありません'}"
+									class="item-image">
 								<div>
 									<p th:text="${cartItem.item.name}"></p>
 									<p class="status" th:text="${cartItem.item.status}"></p>
@@ -52,17 +66,8 @@
 							<span
 								th:text="'¥' + ${#numbers.formatDecimal(cartItem.item.price, 0, 'COMMA', 0, 'POINT')}"></span>
 						</td>
-
 						<!-- 操作 -->
 						<td>
-							<!-- 購入 -->
-							<form th:action="@{/cart/purchase}" method="post" style="display:inline;">
-								<input type="hidden" name="cartItemId" th:value="${cartItem.id}">
-								<button type="submit" class="button" th:disabled="${cartItem.item.status != '出品中'}">
-									購入する
-								</button>
-							</form>
-
 							<!-- 削除 -->
 							<form th:action="@{/cart/remove}" method="post" style="display:inline;">
 								<input type="hidden" name="cartItemId" th:value="${cartItem.id}">
@@ -74,13 +79,13 @@
 					</tr>
 				</tbody>
 			</table>
-			
+
 			<div class="button-group">
 				<a th:href="@{/items}" class="button secondary">商品一覧に戻る</a>
 			</div>
 		</div>
-
 	</div>
+
 </body>
 
 </html>

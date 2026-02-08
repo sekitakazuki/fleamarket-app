@@ -1,7 +1,5 @@
 package com.example.fleamarketsystem.controller;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,10 +15,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.example.fleamarketsystem.entity.AppOrder;
-import com.example.fleamarketsystem.entity.Cart;
-import com.example.fleamarketsystem.entity.CartItem;
-import com.example.fleamarketsystem.entity.Item;
 import com.example.fleamarketsystem.entity.User;
 import com.example.fleamarketsystem.repository.AppOrderRepository;
 import com.example.fleamarketsystem.repository.CartItemRepository;
@@ -130,58 +124,6 @@ public class AppOrderController {
 			redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
 		}
 		return "redirect:/my-page/sales";
-	}
-
-	@PostMapping("/cart/purchase")
-	public String purchaseFromCart(
-			@AuthenticationPrincipal UserDetails userDetails,
-			@RequestParam("cartItemId") Long cartItemId,
-			RedirectAttributes redirectAttributes) {
-
-		User buyer = userService.getUserByEmail(userDetails.getUsername())
-				.orElseThrow(() -> new RuntimeException("User not found"));
-
-		try {
-			appOrderService.purchaseFromCart(cartItemId, buyer);
-			redirectAttributes.addFlashAttribute("successMessage", "商品を購入しました");
-			return "redirect:/my-page/orders";
-		} catch (IllegalStateException | IllegalArgumentException e) {
-			redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-			return "redirect:/cart";
-		}
-	}
-
-	@PostMapping("/purchase")
-	public String purchaseCart(@AuthenticationPrincipal UserDetails userDetails) throws Exception {
-
-		User buyer = userService.getUserByEmail(userDetails.getUsername())
-				.orElseThrow(() -> new RuntimeException("User not found"));
-
-		Cart cart = cartRepository.findByUser(buyer)
-				.orElseThrow(() -> new RuntimeException("カートが存在しません"));
-
-		List<CartItem> cartItems = cartItemRepository.findByCart(cart);
-
-		if (cartItems.isEmpty()) {
-			throw new RuntimeException("カートが空です");
-		}
-
-		for (CartItem cartItem : cartItems) {
-			Item item = cartItem.getItem();
-
-			AppOrder order = new AppOrder();
-			order.setItem(item);
-			order.setBuyer(buyer);
-			order.setPrice(item.getPrice());
-			order.setStatus("購入済");
-
-			appOrderRepository.save(order);
-		}
-
-		// カートを空にする
-		cartItemRepository.deleteAll(cartItems);
-
-		return "redirect:/order/complete";
 	}
 
 }

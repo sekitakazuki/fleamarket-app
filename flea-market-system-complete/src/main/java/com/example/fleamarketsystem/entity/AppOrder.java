@@ -52,4 +52,7 @@ public class AppOrder {
 	public void setPaymentIntentId(String paymentIntentId) {
 		this.paymentIntentId = paymentIntentId;
 	}
+
+	@Column(name = "stripe_session_id")
+	private String stripeSessionId;
 }

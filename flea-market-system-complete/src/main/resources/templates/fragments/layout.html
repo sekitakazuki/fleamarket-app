@@ -11,7 +11,7 @@
     <nav class="navbar">
       <a class="brand" th:href="@{/items}">FleaMarket</a>
       <div class="nav-links">
-        <a th:href="@{/items}">商品一覧</a>
+        <a th:href="@{/items}" class="center-a">商品一覧</a>
         <a th:href="@{/admin/users}" th:if="${#authorization.expression('hasRole(''ADMIN'')')}">ユーザー管理</a>
       </div>
 

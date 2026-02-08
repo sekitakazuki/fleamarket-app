@@ -23,4 +23,7 @@ public interface AppOrderRepository extends JpaRepository<AppOrder, Long> {
 
 	// PaymentIntent IDで1件を特定（決済完了時に使う）
 	Optional<AppOrder> findByPaymentIntentId(String paymentIntentId);
+
+	// セッションIDに紐づく注文（複数）を取得するために追加
+	List<AppOrder> findByStripeSessionId(String stripeSessionId);
 }

@@ -20,6 +20,7 @@ body {
 /* ナビ */
 .navbar {
   display: flex; align-items: center; justify-content: space-between;
+  text-align: center;
   gap: 1rem; padding: 0.75rem 1rem; background: var(--card); border-bottom: 1px solid var(--border);
 }
 .brand { font-weight: 700; text-decoration: none; color: var(--text); }
@@ -429,4 +430,8 @@ tr:hover {
 	width: 300px;
     height: 300px; 
     object-fit: cover;
+}
+
+.center-a{
+	align-items: center;
 }

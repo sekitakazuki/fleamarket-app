@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +23,7 @@ import com.example.fleamarketsystem.repository.CartRepository;
 import com.example.fleamarketsystem.repository.ItemRepository;
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
+import com.stripe.model.checkout.Session;
 
 @Service
 public class AppOrderService {
@@ -158,34 +161,55 @@ public class AppOrderService {
 				.collect(Collectors.groupingBy(AppOrder::getStatus, Collectors.counting()));
 	}
 
+	// AppOrderService.java
+
 	@Transactional
-	public void purchaseFromCart(Long cartItemId, User buyer) {
+	public String initiateCartPurchase(User buyer, HttpServletRequest request) throws StripeException {
+		// 1. カート内商品の取得
+		List<CartItem> cartItems = cartItemRepository.findByCart_User(buyer);
+		if (cartItems.isEmpty())
+			throw new IllegalStateException("カートが空です");
 
-		CartItem cartItem = cartItemRepository.findById(cartItemId)
-				.orElseThrow(() -> new IllegalArgumentException("カート商品が存在しません"));
+		// 2. Stripeセッション作成 (StripeServiceのMap版を呼び出す)
+		Session session = stripeService.createCheckoutSession(cartItems, buyer, request);
 
-		if (!cartItem.getCart().getId().equals(buyer.getId())) {
-			throw new IllegalStateException("不正な操作です");
+		// 3. 注文データを「決済待ち」で保存
+		for (CartItem ci : cartItems) {
+			AppOrder order = new AppOrder();
+			order.setItem(ci.getItem());
+			order.setBuyer(buyer);
+			order.setPrice(ci.getItem().getPrice());
+			order.setStatus("決済待ち");
+			order.setStripeSessionId(session.getId()); // ここで紐付け！
+			order.setCreatedAt(LocalDateTime.now());
+			appOrderRepository.save(order);
 		}
+		return session.getUrl();
+	}
 
-		Item item = cartItem.getItem();
+	@Transactional
+	public void completeCartPurchase(String sessionId) {
+		// 1. セッションIDに紐づく注文をすべて取得
+		List<AppOrder> orders = appOrderRepository.findByStripeSessionId(sessionId);
 
-		if (!"出品中".equals(item.getStatus())) {
-			throw new IllegalStateException("この商品は既に購入されています");
+		if (!orders.isEmpty()) {
+			User buyer = orders.get(0).getBuyer();
+
+			for (AppOrder order : orders) {
+				order.setStatus("購入済");
+				itemService.markItemAsSold(order.getItem().getId());
+
+				// 通知処理（任意）
+				if (order.getItem().getSeller().getLineNotifyToken() != null) {
+					lineNotifyService.sendMessage(order.getItem().getSeller().getLineNotifyToken(),
+							"商品「" + order.getItem().getName() + "」が購入されました！");
+				}
+			}
+			appOrderRepository.saveAll(orders);
+
+			// 2. カートを空にする
+			cartItemRepository.deleteByCart_User(buyer);
 		}
-
-		AppOrder order = new AppOrder();
-		order.setItem(item);
-		order.setBuyer(buyer);
-		order.setPrice(item.getPrice());
-		order.setStatus("購入済");
-
-		appOrderRepository.save(order);
-
-		item.setStatus("購入済");
-		itemRepository.save(item);
-
-		cartItemRepository.delete(cartItem);
 	}
 
 }
